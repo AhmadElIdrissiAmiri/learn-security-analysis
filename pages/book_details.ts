@@ -1,9 +1,9 @@
-import Book  from '../models/book';
-import BookInstance, { IBookInstance }  from '../models/bookinstance';
+import Book from '../models/book';
+import BookInstance, { IBookInstance } from '../models/bookinstance';
 import express from 'express';
+import { validateIdMiddleware, RequestWithSanitizedId } from '../sanitizers/idSanitizer';
 
 const router = express.Router();
-
 
 /**
  * @route GET /book_dtls
@@ -13,27 +13,33 @@ const router = express.Router();
  * @returns 404 - if the book is not found
  * @returns 500 - if there is an error in the database
  */
-router.get('/', async (req, res) => {
-  const id = req.query.id as string;
+router.get('/', validateIdMiddleware, async (req: RequestWithSanitizedId, res) => {
+  // The id has been sanitized by validateIdMiddleware before use
+  const id = req.sanitizedId;
+  
   try {
     const [book, copies] = await Promise.all([
       Book.getBook(id),
-      BookInstance.getBookDetails(id)
+      BookInstance.getBookDetails(id),
     ]);
 
+    if (!copies) {
+      res.status(404).send(`Book ${encodeURIComponent(id || '')} not found`);
+      return;
+    }
     if (!book) {
-      res.status(404).send(`Book ${id} not found`);
+      res.status(404).send(`Book ${encodeURIComponent(id || '')} not found`);
       return;
     }
 
     res.send({
       title: book.title,
       author: book.author.name,
-      copies: copies
+      copies: copies,
     });
   } catch (err) {
     console.error('Error fetching book:', err);
-    res.status(500).send(`Error fetching book ${id}`);
+    res.status(500).send(`Error fetching book ${encodeURIComponent(id || '')}`);
   }
 });
 

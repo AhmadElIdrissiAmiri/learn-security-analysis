@@ -36,7 +36,7 @@ export interface IBook extends Document {
  * @property {Function} saveBookOfExistingAuthorAndGenre - A function to save a book of an existing author and genre.
  */
 interface IBookModel extends Model<IBook> {
-  getBook(id: string): Promise<IBook | null>;
+  getBook(id?: string): Promise<IBook | null>;
   getAllBooksWithAuthors(projectionOpts: string, sortOpts?: { [key: string]: 1 | -1 }): Promise<IBook[]>;
   getBookCount(fitler?: FilterQuery<IBook>): Promise<number>;
 }
@@ -68,7 +68,10 @@ const BookSchema: Schema<IBook> = new Schema(
  * @param id of a book
  * @returns a promise of the book or null.
  */
-BookSchema.statics.getBook = async function (id: string): Promise<IBook | null> {
+BookSchema.statics.getBook = async function (id?: string): Promise<IBook | null> {
+  if (!id) {
+    return null;
+  }
   return this.findById(id).populate('author').populate('genre').exec();
 }
 

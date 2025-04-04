@@ -23,7 +23,7 @@ export interface IBookInstance extends Document {
  * @property {Function} getBookInstanceCount - Static method to get the count of book instances.
  */
 export interface IBookInstanceModel extends Model<IBookInstance> {
-  getBookDetails(id: string, selectOptions?: string): Promise<IBookInstance[]>;
+  getBookDetails(id?: string, selectOptions?: string): Promise<IBookInstance[]>;
   getAllBookStatuses(): Promise<string[]>;
   getBookInstanceCount(filter?: FilterQuery<IBookInstance>): Promise<number>;
 }
@@ -46,7 +46,10 @@ var BookInstanceSchema: Schema<IBookInstance> = new Schema(
  * @param selectOptions the fields to select
  * @returns a promise that resolves to an array of IBookInstance documents
  */
-BookInstanceSchema.statics.getBookDetails = async function (id: string, selectOptions?: string): Promise<IBookInstance[]> {
+BookInstanceSchema.statics.getBookDetails = async function (id?: string, selectOptions?: string): Promise<IBookInstance[]> {
+  if (!id) {
+    return [];
+  }
   if(selectOptions) {
     return BookInstance.find({ book: id }).select(selectOptions).exec();
   }
